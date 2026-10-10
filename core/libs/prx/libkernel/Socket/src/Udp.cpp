@@ -11,6 +11,7 @@
 #include <cerrno>
 #endif
 #include "prx/libc/include/GuestArena.hpp"
+#include "prx/libc/include/PreciseWait.hpp"
 #include "prx/libc/include/general/VabiMacros.hpp"
 #include "prx/libkernel/Socket/include/SocketRuntime.hpp"
 #include <algorithm>
@@ -26,7 +27,6 @@
 #include <cstddef>
 #include <stdexcept>
 #include <string>
-#include <thread>
 #include <vector>
 
 extern "C" int* APS5_VABI __error_nid_postfix();
@@ -719,7 +719,7 @@ int APS5_VABI poll_nid_postfix(GuestPollDescriptor* descriptors, std::uint32_t c
     if (native.empty()) {
         if (ready || timeout == 0) return ready;
         if (timeout < 0) throw std::runtime_error("poll: an infinite wait without sockets never returns");
-        std::this_thread::sleep_for(std::chrono::milliseconds(timeout));
+        PreciseSleepUs(static_cast<unsigned long long>(timeout) * 1000);
         return 0;
     }
     const int wait = ready ? 0 : timeout;

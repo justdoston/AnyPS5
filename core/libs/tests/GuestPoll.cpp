@@ -19,9 +19,14 @@ std::int64_t APS5_VABI send_nid_postfix(int, const void*, std::uint64_t, int);
 std::int64_t APS5_VABI recv_nid_postfix(int, void*, std::uint64_t, int);
 int APS5_VABI close_nid_postfix(int);
 int APS5_VABI poll_nid_postfix(PollDescriptor*, std::uint32_t, int);
+int APS5_VABI select_nid_postfix(int, void*, void*, void*, const void*);
 int* APS5_VABI __error_nid_postfix();
 }
 static void Require(bool value) { if (!value) std::abort(); }
+struct Timeval {
+    std::int64_t seconds;
+    std::int64_t microseconds;
+};
 constexpr short In = 0x1;
 constexpr short Out = 0x4;
 constexpr short Hup = 0x10;
@@ -59,6 +64,15 @@ int main() {
     PollDescriptor closed[2]{{client, In, 0}, {listener, In, 0}};
     Require(poll_nid_postfix(closed, 2, -1) == 1 && closed[0].revents == Invalid && closed[1].revents == 0);
     Require(poll_nid_postfix(nullptr, 0, 10) == 0);
+    const auto shortWaits = std::chrono::steady_clock::now();
+    for (int i = 0; i < 20; ++i) Require(poll_nid_postfix(nullptr, 0, 1) == 0);
+    const auto pollWaits = std::chrono::steady_clock::now() - shortWaits;
+    Require(pollWaits >= std::chrono::milliseconds(20) && pollWaits < std::chrono::milliseconds(200));
+    const Timeval millisecond{0, 1000};
+    const auto selectStart = std::chrono::steady_clock::now();
+    for (int i = 0; i < 20; ++i) Require(select_nid_postfix(0, nullptr, nullptr, nullptr, &millisecond) == 0);
+    const auto selectWaits = std::chrono::steady_clock::now() - selectStart;
+    Require(selectWaits >= std::chrono::milliseconds(20) && selectWaits < std::chrono::milliseconds(200));
     Require(poll_nid_postfix(nullptr, 1, 0) == -1 && *__error_nid_postfix() == 14);
     Require(poll_nid_postfix(&single, 1, -2) == -1 && *__error_nid_postfix() == 22);
     Require(close_nid_postfix(server) == 0);

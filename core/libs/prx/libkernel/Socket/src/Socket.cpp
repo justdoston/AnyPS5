@@ -2,12 +2,12 @@
 #include <cstddef>
 #include "SceTypes.hpp"
 #include "prx/libc/include/General.hpp"
+#include "prx/libc/include/PreciseWait.hpp"
 #include "prx/libkernel/Socket/include/SocketPoll.hpp"
 
 #include <algorithm>
 #include <atomic>
 #include <chrono>
-#include <thread>
 #include <vector>
 
 namespace {
@@ -100,7 +100,8 @@ int APS5_VABI select_nid_postfix(int nfds, void* readfds, void* writefds, void* 
                 return ready;
             }
         } else if (waitMilliseconds > 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(waitMilliseconds));
+            const auto slice = std::chrono::steady_clock::now() + std::chrono::milliseconds(waitMilliseconds);
+            PreciseSleepUntil(deadline < slice ? deadline : slice);
         }
         if (limit != nullptr && std::chrono::steady_clock::now() >= deadline) {
             for (const auto& entry : entries) {
