@@ -76,6 +76,9 @@ target_include_directories(relinker PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/codegen/include
         ${CMAKE_CURRENT_SOURCE_DIR}/relinker/include
 )
+if(MINGW)
+    target_link_options(relinker PRIVATE -municode)
+endif()
 
 if(WIN32)
     add_test_executable(windows_dependency_diagnostics_tests EXCLUDE_FROM_ALL
@@ -160,6 +163,16 @@ if(BUILD_TESTING)
         add_test(NAME file_writer_binary COMMAND file_writer_tests binary)
         add_test(NAME file_writer_text COMMAND file_writer_tests text)
     endif()
+    add_test_executable(file_unicode_path_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/tests/FileUnicodePathTests.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/src/FileReader.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/src/FileWriter.cpp
+    )
+    target_include_directories(file_unicode_path_tests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/domain/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/io/include
+    )
+    add_test(NAME file_unicode_path COMMAND file_unicode_path_tests)
 
     add_test_executable(amd64_only_converter_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/codegen/tests/Amd64OnlyConverterTests.cpp
