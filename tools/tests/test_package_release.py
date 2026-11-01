@@ -283,18 +283,24 @@ class ReleasePackageTests(unittest.TestCase):
         with tarfile.open(self.output / "prx-linux-v1.tar.gz") as archive:
             self.assertEqual(archive.extractfile("libs/licenses/opus.txt").read(), license_file.read_bytes())
 
-    def test_zlib_library_archives_include_the_bundled_license(self):
+    def test_webkit_requirements_archives_include_the_bundled_licenses(self):
         (self.source / "core/libs/prx/libSceNKWebKitRequirements").mkdir()
         (self.unpatched.parent / "libSceNKWebKitRequirements.prx").write_bytes(b"unpatched library")
         (self.library.parent / "libSceNKWebKitRequirements.prx").write_bytes(b"zlib library bytes")
-        license_file = self.source / "3rdparty/zlib/LICENSE"
-        license_file.parent.mkdir(parents=True)
-        license_file.write_bytes(b"zlib license notice\n")
+        notices = {
+            "3rdparty/zlib/LICENSE": ("zlib.txt", b"zlib license notice\n"),
+            "3rdparty/libjpeg-turbo/LICENSE.md": ("libjpeg-turbo.txt", b"libjpeg-turbo license\n"),
+            "3rdparty/libjpeg-turbo/README.ijg": ("libjpeg-turbo-ijg.txt", b"IJG notice\n"),
+        }
+        for path, (_, content) in notices.items():
+            (self.source / path).parent.mkdir(parents=True, exist_ok=True)
+            (self.source / path).write_bytes(content)
         package_release.package("linux", self.build, self.output, "v1")
-        with zipfile.ZipFile(self.output / "prx-linux-v1.zip") as archive:
-            self.assertEqual(archive.read("libs/licenses/zlib.txt"), license_file.read_bytes())
-        with tarfile.open(self.output / "prx-linux-v1.tar.gz") as archive:
-            self.assertEqual(archive.extractfile("libs/licenses/zlib.txt").read(), license_file.read_bytes())
+        for archive_name, content in notices.values():
+            with zipfile.ZipFile(self.output / "prx-linux-v1.zip") as archive:
+                self.assertEqual(archive.read("libs/licenses/" + archive_name), content)
+            with tarfile.open(self.output / "prx-linux-v1.tar.gz") as archive:
+                self.assertEqual(archive.extractfile("libs/licenses/" + archive_name).read(), content)
 
     def test_zlib_release_without_its_license_is_rejected(self):
         (self.source / "core/libs/prx/libSceNKWebKitRequirements").mkdir()

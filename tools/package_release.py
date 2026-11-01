@@ -83,6 +83,8 @@ def package(platform, build, output, version):
         licenses.append((ROOT / "3rdparty/opus/COPYING", "libs/licenses/opus.txt"))
     if "libSceNKWebKitRequirements.prx" in expected:
         licenses.append((ROOT / "3rdparty/zlib/LICENSE", "libs/licenses/zlib.txt"))
+        licenses.append((ROOT / "3rdparty/libjpeg-turbo/LICENSE.md", "libs/licenses/libjpeg-turbo.txt"))
+        licenses.append((ROOT / "3rdparty/libjpeg-turbo/README.ijg", "libs/licenses/libjpeg-turbo-ijg.txt"))
     if platform == "windows":
         runtime = windows_runtime(build)
         files.extend(runtime / name for name in ("libgcc_s_seh-1.dll", "libstdc++-6.dll", "libwinpthread-1.dll"))

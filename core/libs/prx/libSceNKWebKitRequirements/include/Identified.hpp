@@ -1,5 +1,6 @@
 #pragma once
 #include "prx/libc/include/general/VabiMacros.hpp"
+#include "prx/libSceNKWebKitRequirements/include/GuestJpeg.hpp"
 #include "prx/libSceNKWebKitRequirements/include/GuestZStream.hpp"
 #include <cstdint>
 
@@ -15,21 +16,21 @@ int APS5_VABI inflate_nid_postfix(NKWebKitRequirements::GuestZStream* stream, in
 int APS5_VABI inflateEnd_nid_postfix(NKWebKitRequirements::GuestZStream* stream);
 int APS5_VABI inflateInit2__nid_postfix(NKWebKitRequirements::GuestZStream* stream, int windowBits, const char* version, int streamSize);
 int APS5_VABI inflateReset_nid_postfix(NKWebKitRequirements::GuestZStream* stream);
-int APS5_VABI jpeg_CreateDecompress_nid_postfix();
-int APS5_VABI jpeg_calc_output_dimensions_nid_postfix();
-int APS5_VABI jpeg_consume_input_nid_postfix();
-int APS5_VABI jpeg_destroy_decompress_nid_postfix();
-int APS5_VABI jpeg_finish_decompress_nid_postfix();
-int APS5_VABI jpeg_finish_output_nid_postfix();
-int APS5_VABI jpeg_has_multiple_scans_nid_postfix();
-int APS5_VABI jpeg_input_complete_nid_postfix();
-int APS5_VABI jpeg_read_header_nid_postfix();
-int APS5_VABI jpeg_read_scanlines_nid_postfix();
-int APS5_VABI jpeg_resync_to_restart_nid_postfix();
-int APS5_VABI jpeg_save_markers_nid_postfix();
-int APS5_VABI jpeg_start_decompress_nid_postfix();
-int APS5_VABI jpeg_start_output_nid_postfix();
-int APS5_VABI jpeg_std_error_nid_postfix();
+void APS5_VABI jpeg_CreateDecompress_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo, std::int32_t version, std::uint64_t structSize);
+void APS5_VABI jpeg_calc_output_dimensions_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo);
+std::int32_t APS5_VABI jpeg_consume_input_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo);
+void APS5_VABI jpeg_destroy_decompress_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo);
+std::int32_t APS5_VABI jpeg_finish_decompress_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo);
+std::int32_t APS5_VABI jpeg_finish_output_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo);
+std::int32_t APS5_VABI jpeg_has_multiple_scans_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo);
+std::int32_t APS5_VABI jpeg_input_complete_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo);
+std::int32_t APS5_VABI jpeg_read_header_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo, std::int32_t requireImage);
+std::uint32_t APS5_VABI jpeg_read_scanlines_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo, std::uint8_t** scanlines, std::uint32_t maxLines);
+std::int32_t APS5_VABI jpeg_resync_to_restart_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo, std::int32_t desired);
+void APS5_VABI jpeg_save_markers_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo, std::int32_t markerCode, std::uint32_t lengthLimit);
+std::int32_t APS5_VABI jpeg_start_decompress_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo);
+std::int32_t APS5_VABI jpeg_start_output_nid_postfix(NKWebKitRequirements::GuestJpegDecompress* cinfo, std::int32_t scanNumber);
+NKWebKitRequirements::GuestJpegErrorMgr* APS5_VABI jpeg_std_error_nid_postfix(NKWebKitRequirements::GuestJpegErrorMgr* err);
 int APS5_VABI psl_builtin_nid_postfix();
 int APS5_VABI psl_builtin_file_time_nid_postfix();
 int APS5_VABI psl_builtin_filename_nid_postfix();
