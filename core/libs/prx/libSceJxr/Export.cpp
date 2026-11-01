@@ -60,79 +60,19 @@ std::int64_t APS5_VABI writeIS_nid_postfix(void*, Jxr::BitIo* io) {
     return result;
 }
 
-int APS5_VABI PKCodecFactory_CreateCodec_nid_postfix() {
+std::int64_t APS5_VABI PKCodecFactory_CreateCodec_nid_postfix(const std::uint32_t* iid, void** object) {
     NotImplemented_nid_no_patch(__func__);
 }
 
-int APS5_VABI PKCodecFactory_CreateDecoderFromFile_nid_postfix() {
+std::int64_t APS5_VABI PKCodecFactory_CreateDecoderFromFile_nid_postfix(const char* filename, Jxr::ImageDecode** decoder) {
     NotImplemented_nid_no_patch(__func__);
 }
 
-int APS5_VABI PKCodecFactory_CreateFormatConverter_nid_postfix() {
+std::int64_t APS5_VABI PKFormatConverter_InitializeConvert_nid_postfix(Jxr::FormatConverter* converter, JxrGuestGuid source, char* extension, JxrGuestGuid target) {
     NotImplemented_nid_no_patch(__func__);
 }
 
-int APS5_VABI PKCreateCodecFactory_Release_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKCreateCodecFactory_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKCreateFactory_CreateStream_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKCreateFactory_Release_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKCreateFactory_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKFormatConverter_Convert_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKFormatConverter_Copy_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKFormatConverter_EnumConversions_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKFormatConverter_GetPixelFormat_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKFormatConverter_GetResolution_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKFormatConverter_GetSize_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKFormatConverter_GetSourcePixelFormat_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKFormatConverter_InitializeConvert_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKFormatConverter_Initialize_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKFormatConverter_Release_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageDecode_Copy_nid_postfix() {
+std::int64_t APS5_VABI PKFormatConverter_Initialize_nid_postfix(Jxr::FormatConverter* converter, Jxr::ImageDecode* decoder, char* extension, JxrGuestGuid format) {
     NotImplemented_nid_no_patch(__func__);
 }
 
@@ -140,71 +80,7 @@ int APS5_VABI PKImageDecode_Create_WMP_nid_postfix() {
     NotImplemented_nid_no_patch(__func__);
 }
 
-int APS5_VABI PKImageDecode_Create_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageDecode_GetColorContext_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageDecode_GetDescriptiveMetadata_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageDecode_GetFrameCount_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageDecode_GetPixelFormat_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageDecode_GetResolution_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageDecode_GetSize_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageDecode_Initialize_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageDecode_Release_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageDecode_SelectFrame_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageEncode_CreateNewFrame_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
 int APS5_VABI PKImageEncode_Create_WMP_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageEncode_Create_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageEncode_Initialize_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageEncode_Release_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageEncode_SetColorContext_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageEncode_SetDescriptiveMetadata_nid_postfix() {
     NotImplemented_nid_no_patch(__func__);
 }
 
@@ -224,31 +100,11 @@ int APS5_VABI PKImageEncode_SetPhotoshopMetadata_WMP_nid_postfix() {
     NotImplemented_nid_no_patch(__func__);
 }
 
-int APS5_VABI PKImageEncode_SetPixelFormat_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageEncode_SetResolution_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageEncode_SetSize_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
 int APS5_VABI PKImageEncode_SetXMPMetadata_WMP_nid_postfix() {
     NotImplemented_nid_no_patch(__func__);
 }
 
-int APS5_VABI PKImageEncode_Terminate_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
 int APS5_VABI PKImageEncode_Transcode_nid_postfix() {
-    NotImplemented_nid_no_patch(__func__);
-}
-
-int APS5_VABI PKImageEncode_WritePixels_nid_postfix() {
     NotImplemented_nid_no_patch(__func__);
 }
 

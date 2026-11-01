@@ -50,3 +50,13 @@ int JxrPixelFormatFromHash_nid_no_patch(uint8_t hash, uint8_t* guid) {
     memcpy(guid, found, 16);
     return 1;
 }
+
+int64_t JxrEnumConversions_nid_no_patch(const uint8_t* source, uint32_t index, uint8_t* target) {
+    GUID from;
+    const PKPixelFormatGUID* to = NULL;
+    ERR result;
+    memcpy(&from, source, sizeof(from));
+    result = PKFormatConverter_EnumConversions(&from, index, &to);
+    memcpy(target, to, 16);
+    return result;
+}
