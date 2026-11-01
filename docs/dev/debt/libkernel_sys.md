@@ -7,7 +7,7 @@
 
 ### Unknown function info
 
-- [libkernel_sys additional exports](../../../core/libs/prx/libkernel_sys/AdditionalExports.cpp) - 325 callable exports have import-resolution declarations only. Parameter lists, return types and behavior remain unverified. Parameterless `int` declarations are placeholders, not verified ABI prototypes; every entry throws through `NotImplemented_nid_no_patch`. Unresolved names use literal NID aliases; no runtime functionality or data objects are fabricated. Existing providers and exports supplied by open pull requests are excluded. Kernel variant imports already resolve through `libkernel`, then `libc`; existing providers remain unchanged. Six native data exports (`errno`, `__stack_chk_guard`, `_sigintr`, `__progname`, `environ`, and NID `AxgW94umKqU`) require separate storage, layout, TLS and ownership validation and are not added as callable aliases or fabricated globals.
+- [libkernel_sys additional exports](../../../core/libs/prx/libkernel_sys/AdditionalExports.cpp) - 323 callable exports have import-resolution declarations only. Parameter lists, return types and behavior remain unverified. Parameterless `int` declarations are placeholders, not verified ABI prototypes; every entry throws through `NotImplemented_nid_no_patch`. Unresolved names use literal NID aliases; no runtime functionality or data objects are fabricated. Existing providers and exports supplied by open pull requests are excluded. Kernel variant imports already resolve through `libkernel`, then `libc`; existing providers remain unchanged. Six native data exports (`errno`, `__stack_chk_guard`, `_sigintr`, `__progname`, `environ`, and NID `AxgW94umKqU`) require separate storage, layout, TLS and ownership validation and are not added as callable aliases or fabricated globals.
 
 | Name | NID |
 | --- | --- |
@@ -55,8 +55,6 @@
 | `__sys_suspend_process` | `-rXkJO1hOk0` |
 | `__sys_test_debug_rwmem` | `EeVthQocE3Y` |
 | `__sys_workaround8849` | `jTPE1AS7uak` |
-| `__ubsan_handle_cfi_check_fail` | `K4M0IhFb88Q` |
-| `__ubsan_handle_cfi_check_fail_abort` | `sPU6b2LaPqg` |
 | `_dup2` | `W8f1adVl+48` |
 | `_execve` | `-3nj+K1elI0` |
 | `_execvpe` | `ScfDTOqLOMw` |
@@ -343,6 +341,7 @@
 
 ### Functional
 
+- [__ubsan_handle_cfi_check_fail and __ubsan_handle_cfi_check_fail_abort](../../../core/libs/prx/libkernel_sys/include/CfiCheckFail.hpp) (libkernel_sys, also libSceNKWebKitRequirements) - the console's handlers are not measured; they follow LLVM 18.1.8 compiler-rt's standalone UBSan on clang's LP64 `CFICheckFailData`. Each source location is reported once to stderr; the plain handler then returns, and the `_abort` one throws where compiler-rt exits. No symbolizer runs, so the call target prints as `(unknown)`, module notes and the summary line are omitted, and the dynamic type behind a valid vtable is not read. An unknown check kind throws.
 - [sceKernelGetUpdVersion](../../../core/libs/prx/libkernel_sys/Export.Discovery.cpp) (libkernel_sys) - runs the same code as `sysKernelGetUpdVersion` on firmware 13.42 ([disassembly](https://github.com/boykopovar/AnyPS5/pull/10671#issuecomment-6398286973)), so it forwards there: a null output is refused with `SCE_KERNEL_ERROR_EINVAL`, and otherwise the 4 bytes come from `machdep.upd_version`, whose retail value is unmeasured (see libkernel's entry)
 - [get_vm_map_timestamp](../../../core/libs/prx/libkernel_sys/Export.Discovery.cpp) (libkernel_sys), firmware 13.60 `libkernel_sys.sprx`, syscall 624, returns the low 32 bits of the guest-allocation generation. That value advances whenever a guest-allocation registry scope ends, including lookups (`malloc_usable_size`) and every guest heap allocation or free, and whenever a tracked range is invalidated. FreeBSD advances a map's timestamp only when the map is write-locked, so the value changes far more often than the console's would. Host mappings made outside the tracker can be missed. Not hardware-validated.
 - [kenv](../../../core/libs/prx/libkernel_sys/Export.cpp) (libkernel_sys) follows FreeBSD 11.4's [`sys_kenv`](https://github.com/freebsd/freebsd-src/blob/release/11.4.0/sys/kern/kern_environment.c#L87-L204) over an in-memory table that starts empty, since the console's boot environment is unmeasured, so a variable the system sets at boot reads as `ENOENT`. `KENV_SET` and `KENV_UNSET` always pass the privilege check, as the guest is uid 0. A name or value is read with the guest path copy, which reads up to 1024 bytes, so an unterminated string followed by an unreadable page fails with `EFAULT` where FreeBSD's bounded `copyinstr` gives `ENAMETOOLONG`. A 513th variable is dropped silently, as in FreeBSD. Console behaviour is unverified
