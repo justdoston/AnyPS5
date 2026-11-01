@@ -1,9 +1,11 @@
 add_library(libSceNKWebKitRequirements SHARED EXCLUDE_FROM_ALL Export.cpp Zlib.cpp)
-target_include_directories(libSceNKWebKitRequirements PRIVATE ${LIBS_INCLUDE_DIR}
-    ${CMAKE_SOURCE_DIR}/3rdparty/libjpeg-turbo/src/spng/zlib)
+target_include_directories(libSceNKWebKitRequirements PRIVATE ${LIBS_INCLUDE_DIR})
 set_target_properties(libSceNKWebKitRequirements PROPERTIES CXX_EXTENSIONS OFF)
 configure_windows_unwind(libSceNKWebKitRequirements)
-target_link_libraries(libSceNKWebKitRequirements PRIVATE jpeg_turbo)
+target_link_libraries(libSceNKWebKitRequirements PRIVATE zlibstatic)
+if(MINGW OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_link_options(libSceNKWebKitRequirements PRIVATE LINKER:--exclude-libs,ALL)
+endif()
 
 if(BUILD_TESTING)
     add_test_executable(guest_webkit_zlib_tests ${LIBS_INCLUDE_DIR}/tests/GuestWebKitZlib.cpp)

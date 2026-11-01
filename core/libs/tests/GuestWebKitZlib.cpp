@@ -50,6 +50,20 @@ std::vector<std::uint8_t> Sample() {
     return data;
 }
 
+std::uint32_t Crc32(const std::vector<std::uint8_t>& data) {
+    std::uint32_t crc = 0xFFFFFFFFu;
+    for (const auto value : data) {
+        crc ^= value;
+        for (int bit = 0; bit < 8; ++bit) crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1u)));
+    }
+    return ~crc;
+}
+
+std::uint32_t ReadLe32(const std::uint8_t* bytes) {
+    return static_cast<std::uint32_t>(bytes[0]) | static_cast<std::uint32_t>(bytes[1]) << 8 |
+        static_cast<std::uint32_t>(bytes[2]) << 16 | static_cast<std::uint32_t>(bytes[3]) << 24;
+}
+
 std::uint32_t Adler32(const std::vector<std::uint8_t>& data) {
     std::uint32_t low = 1;
     std::uint32_t high = 0;
@@ -109,6 +123,13 @@ void RoundTrip(int windowBits, std::uint32_t chunk) {
     const auto compressed = Compress(deflater, data, chunk);
     Require(deflater.total_in == data.size() && deflater.total_out == compressed.size(), "deflate totals");
     if (windowBits > 0 && windowBits < 16) Require(deflater.adler == Adler32(data), "deflate adler");
+    if (windowBits > 15) {
+        const std::uint8_t header[] = {0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 0, 3};
+        Require(compressed.size() > 18 && std::memcmp(compressed.data(), header, sizeof(header)) == 0, "gzip header");
+        Require(deflater.adler == Crc32(data), "gzip crc in adler");
+        Require(ReadLe32(compressed.data() + compressed.size() - 8) == Crc32(data), "gzip trailer crc");
+        Require(ReadLe32(compressed.data() + compressed.size() - 4) == data.size(), "gzip trailer size");
+    }
     Require(compressed.size() <= deflateBound_nid_postfix(nullptr, data.size()), "conservative bound holds");
 
     Require(deflateReset_nid_postfix(&deflater) == Z_OK, "deflate reset");
@@ -128,6 +149,14 @@ void RoundTrip(int windowBits, std::uint32_t chunk) {
     Require(inflater.total_in == 0 && inflater.total_out == 0, "inflate reset clears totals");
     Require(Decompress(inflater, compressed, chunk) == data, "inflate after reset");
     Require(inflateEnd_nid_postfix(&inflater) == Z_OK && inflater.state == nullptr, "inflate end");
+
+    if (windowBits == 15 || windowBits == 31) {
+        GuestZStream detector{};
+        Require(inflateInit2__nid_postfix(&detector, 47, "1.3.1", STREAM_SIZE) == Z_OK, "detecting inflate init");
+        Require(Decompress(detector, compressed, chunk) == data, "detected wrapper decodes");
+        Require(detector.adler == (windowBits == 31 ? Crc32(data) : Adler32(data)), "detected check value");
+        Require(inflateEnd_nid_postfix(&detector) == Z_OK, "detecting inflate end");
+    }
 }
 
 void Errors() {
@@ -165,6 +194,38 @@ void Errors() {
     Require(deflate_nid_postfix(&deflater, Z_FINISH) == Z_STREAM_ERROR, "missing free function");
     deflater.zfree = saved;
     Require(deflateEnd_nid_postfix(&deflater) == Z_OK, "deflate end");
+
+    GuestZStream gzipDeflater{};
+    Require(deflateInit2__nid_postfix(&gzipDeflater, 6, Z_DEFLATED, 31, 8, 0, "1.3.1", STREAM_SIZE) == Z_OK, "gzip deflate init");
+    Require(deflateBound_nid_postfix(&gzipDeflater, 1000) == 1025, "gzip default parameter bound");
+    Require(deflateEnd_nid_postfix(&gzipDeflater) == Z_OK, "gzip deflate end");
+
+    const auto expectGzipError = [](std::vector<std::uint8_t> input, const char* message) {
+        GuestZStream gzipInflater{};
+        Require(inflateInit2__nid_postfix(&gzipInflater, 31, "1.3.1", STREAM_SIZE) == Z_OK, "gzip inflate init");
+        std::uint8_t sink[256];
+        gzipInflater.next_in = input.data();
+        gzipInflater.avail_in = static_cast<std::uint32_t>(input.size());
+        gzipInflater.next_out = sink;
+        gzipInflater.avail_out = sizeof(sink);
+        Require(inflate_nid_postfix(&gzipInflater, Z_NO_FLUSH) == Z_DATA_ERROR, message);
+        Require(gzipInflater.msg != nullptr && std::string(gzipInflater.msg) == message, message);
+        Require(inflateEnd_nid_postfix(&gzipInflater) == Z_OK, "gzip inflate end");
+    };
+    const std::vector<std::uint8_t> emptyGzip{0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    auto badMethod = emptyGzip;
+    badMethod[2] = 9;
+    expectGzipError(badMethod, "unknown compression method");
+    auto badFlags = emptyGzip;
+    badFlags[3] = 0xe0;
+    expectGzipError(badFlags, "unknown header flags set");
+    auto badCrc = emptyGzip;
+    badCrc[12] = 1;
+    expectGzipError(badCrc, "incorrect data check");
+    auto badLength = emptyGzip;
+    badLength[16] = 1;
+    expectGzipError(badLength, "incorrect length check");
+    expectGzipError({0x78, 0x9c, 3, 0, 0, 0, 0, 1}, "incorrect header check");
 
     GuestZStream inflater{};
     Require(inflateInit2__nid_postfix(&inflater, 15, "1.3.1", STREAM_SIZE) == Z_OK, "inflate init");
@@ -227,7 +288,7 @@ void Uncompress() {
 }
 
 int main() {
-    for (const int windowBits : {15, -15, 9}) {
+    for (const int windowBits : {15, -15, 9, 31}) {
         for (const std::uint32_t chunk : {1u, 7u, 4096u}) RoundTrip(windowBits, chunk);
     }
     Errors();

@@ -283,6 +283,27 @@ class ReleasePackageTests(unittest.TestCase):
         with tarfile.open(self.output / "prx-linux-v1.tar.gz") as archive:
             self.assertEqual(archive.extractfile("libs/licenses/opus.txt").read(), license_file.read_bytes())
 
+    def test_zlib_library_archives_include_the_bundled_license(self):
+        (self.source / "core/libs/prx/libSceNKWebKitRequirements").mkdir()
+        (self.unpatched.parent / "libSceNKWebKitRequirements.prx").write_bytes(b"unpatched library")
+        (self.library.parent / "libSceNKWebKitRequirements.prx").write_bytes(b"zlib library bytes")
+        license_file = self.source / "3rdparty/zlib/LICENSE"
+        license_file.parent.mkdir(parents=True)
+        license_file.write_bytes(b"zlib license notice\n")
+        package_release.package("linux", self.build, self.output, "v1")
+        with zipfile.ZipFile(self.output / "prx-linux-v1.zip") as archive:
+            self.assertEqual(archive.read("libs/licenses/zlib.txt"), license_file.read_bytes())
+        with tarfile.open(self.output / "prx-linux-v1.tar.gz") as archive:
+            self.assertEqual(archive.extractfile("libs/licenses/zlib.txt").read(), license_file.read_bytes())
+
+    def test_zlib_release_without_its_license_is_rejected(self):
+        (self.source / "core/libs/prx/libSceNKWebKitRequirements").mkdir()
+        (self.unpatched.parent / "libSceNKWebKitRequirements.prx").write_bytes(b"unpatched library")
+        (self.library.parent / "libSceNKWebKitRequirements.prx").write_bytes(b"zlib library bytes")
+        with self.assertRaisesRegex(RuntimeError, "LICENSE"):
+            package_release.package("linux", self.build, self.output, "v1")
+        self.assertFalse(self.output.exists())
+
     def test_opus_release_without_its_license_is_rejected(self):
         (self.source / "core/libs/prx/libSceOpusCeltDec").mkdir()
         (self.unpatched.parent / "libSceOpusCeltDec.prx").write_bytes(b"unpatched library")

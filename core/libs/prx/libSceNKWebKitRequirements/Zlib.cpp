@@ -50,10 +50,14 @@ static_assert(sizeof(z_size_t) >= sizeof(std::uint64_t));
 
 constexpr int GUEST_STREAM_SIZE = static_cast<int>(sizeof(GuestZStream));
 constexpr uInt MAX_CHUNK = std::numeric_limits<uInt>::max();
+constexpr std::uint64_t GZIP_OS_OFFSET = 9;
+constexpr Bytef GZIP_OS_UNIX = 3;
 
 struct HostStream {
     GuestZStream* guest;
     bool inflating;
+    bool gzip;
+    std::uint64_t written;
     NKWebKitRequirements::GuestAlloc alloc;
     NKWebKitRequirements::GuestFree free;
     void* opaque;
@@ -122,7 +126,7 @@ HostStream* Find(GuestZStream* guest, bool inflating) {
 }
 
 template<typename TInit>
-int Initialize(GuestZStream* guest, const char* version, int streamSize, bool inflating, TInit init) {
+int Initialize(GuestZStream* guest, const char* version, int streamSize, bool inflating, bool gzip, TInit init) {
     if (!version || version[0] != ZLIB_VERSION[0] || streamSize != GUEST_STREAM_SIZE) return Z_VERSION_ERROR;
     if (!guest) return Z_STREAM_ERROR;
     guest->msg = nullptr;
@@ -135,6 +139,7 @@ int Initialize(GuestZStream* guest, const char* version, int streamSize, bool in
     if (!host) return Z_MEM_ERROR;
     host->guest = guest;
     host->inflating = inflating;
+    host->gzip = gzip;
     Load(*host);
     void* const previous = guest->state;
     host->stream.zalloc = HostAlloc;
@@ -159,7 +164,7 @@ int Process(GuestZStream* guest, bool inflating, bool resets, TCall call) {
     HostStream* host = Find(guest, inflating);
     if (!host) return Z_STREAM_ERROR;
     Load(*host);
-    const int result = call(host->stream);
+    const int result = call(*host);
     Store(*host, resets && result == Z_OK);
     return result;
 }
@@ -183,18 +188,30 @@ int End(GuestZStream* guest, bool inflating, TEnd end) {
 extern "C" {
 
 int APS5_VABI deflateInit2__nid_postfix(GuestZStream* stream, int level, int method, int windowBits, int memLevel, int strategy, const char* version, int streamSize) {
-    if (windowBits >= 25 && windowBits <= 31) throw std::runtime_error("deflateInit2_: gzip wrapper is not implemented");
-    return Initialize(stream, version, streamSize, false, [&](z_stream& host) {
+    return Initialize(stream, version, streamSize, false, windowBits > 15, [&](z_stream& host) {
         return deflateInit2(&host, level, method, windowBits, memLevel, strategy);
     });
 }
 
 int APS5_VABI deflate_nid_postfix(GuestZStream* stream, int flush) {
-    return Process(stream, false, false, [flush](z_stream& host) { return deflate(&host, flush); });
+    return Process(stream, false, false, [flush](HostStream& host) {
+        Bytef* const start = host.stream.next_out;
+        const uInt space = host.stream.avail_out;
+        const int result = deflate(&host.stream, flush);
+        const std::uint64_t produced = space - host.stream.avail_out;
+        if (host.gzip && host.written <= GZIP_OS_OFFSET && GZIP_OS_OFFSET < host.written + produced)
+            start[GZIP_OS_OFFSET - host.written] = GZIP_OS_UNIX;
+        host.written += produced;
+        return result;
+    });
 }
 
 int APS5_VABI deflateReset_nid_postfix(GuestZStream* stream) {
-    return Process(stream, false, true, [](z_stream& host) { return deflateReset(&host); });
+    return Process(stream, false, true, [](HostStream& host) {
+        const int result = deflateReset(&host.stream);
+        if (result == Z_OK) host.written = 0;
+        return result;
+    });
 }
 
 int APS5_VABI deflateEnd_nid_postfix(GuestZStream* stream) {
@@ -209,19 +226,17 @@ std::uint64_t APS5_VABI deflateBound_nid_postfix(GuestZStream* stream, std::uint
 }
 
 int APS5_VABI inflateInit2__nid_postfix(GuestZStream* stream, int windowBits, const char* version, int streamSize) {
-    if (windowBits >= 16 && windowBits < 48 && ((windowBits & 15) == 0 || (windowBits & 15) >= 8))
-        throw std::runtime_error("inflateInit2_: gzip decoding is not implemented");
-    return Initialize(stream, version, streamSize, true, [windowBits](z_stream& host) {
+    return Initialize(stream, version, streamSize, true, false, [windowBits](z_stream& host) {
         return inflateInit2(&host, windowBits);
     });
 }
 
 int APS5_VABI inflate_nid_postfix(GuestZStream* stream, int flush) {
-    return Process(stream, true, false, [flush](z_stream& host) { return inflate(&host, flush); });
+    return Process(stream, true, false, [flush](HostStream& host) { return inflate(&host.stream, flush); });
 }
 
 int APS5_VABI inflateReset_nid_postfix(GuestZStream* stream) {
-    return Process(stream, true, true, [](z_stream& host) { return inflateReset(&host); });
+    return Process(stream, true, true, [](HostStream& host) { return inflateReset(&host.stream); });
 }
 
 int APS5_VABI inflateEnd_nid_postfix(GuestZStream* stream) {
