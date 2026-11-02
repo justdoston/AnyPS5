@@ -226,6 +226,19 @@ class ReleasePackageTests(unittest.TestCase):
             self.assertEqual(archive.extractfile("libs/licenses/ogg.txt").read(), b"ogg license")
             self.assertEqual(archive.extractfile("libs/licenses/vorbis.txt").read(), b"vorbis license")
 
+    def test_webkit_requirements_sqlite_license_in_archives(self):
+        (self.source / "core/libs/prx/libSceNKWebKitRequirements").mkdir()
+        (self.unpatched.parent / "libSceNKWebKitRequirements.prx").write_bytes(b"unpatched library")
+        (self.build / "core/libs/libs/libSceNKWebKitRequirements.prx").write_bytes(b"webkit requirements")
+        license_file = self.source / "3rdparty/sqlite/LICENSE.md"
+        license_file.parent.mkdir(parents=True)
+        license_file.write_bytes(b"sqlite license")
+        package_release.package("linux", self.build, self.output, "v1")
+        with zipfile.ZipFile(self.output / "prx-linux-v1.zip") as archive:
+            self.assertEqual(archive.read("libs/licenses/sqlite.txt"), b"sqlite license")
+        with tarfile.open(self.output / "prx-linux-v1.tar.gz") as archive:
+            self.assertEqual(archive.extractfile("libs/licenses/sqlite.txt").read(), b"sqlite license")
+
     def test_windows_runtime_follows_the_configured_compiler_directory(self):
         runtime = self.root / "custom toolchain" / "bin"
         runtime.mkdir(parents=True)
